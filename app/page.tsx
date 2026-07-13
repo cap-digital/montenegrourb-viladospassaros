@@ -1,101 +1,78 @@
-import Image from "next/image";
+import Link from "next/link";
+import { MontenegroLogo } from "@/components/brand/MontenegroLogo";
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <main
+      className="relative flex min-h-screen flex-col overflow-hidden"
+      style={{
+        background:
+          "radial-gradient(120% 100% at 50% -10%, var(--mn-light) 0%, var(--mn-base) 45%, var(--mn-deep) 100%)",
+      }}
+    >
+      {/* Subtle texture / vignette */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, var(--mn-cream) 1px, transparent 0)",
+          backgroundSize: "26px 26px",
+        }}
+      />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Header */}
+      <header className="relative z-10 flex items-center justify-between px-8 py-7 sm:px-14">
+        <MontenegroLogo />
+        <a
+          href="mailto:sac@montenegrourbanismo.com.br"
+          className="hidden text-sm tracking-wide text-mn-cream opacity-75 transition hover:opacity-100 sm:block"
+        >
+          sac@montenegrourbanismo.com.br
+        </a>
+      </header>
+
+      {/* Hero */}
+      <section className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 text-center">
+        <div className="mb-8 flex flex-col items-center">
+          <p className="mb-3 text-xs font-medium uppercase tracking-[0.5em] text-mn-gold">
+            Empreendimento
+          </p>
+          <h1 className="font-serif-display text-6xl font-semibold leading-none tracking-wide text-mn-cream sm:text-7xl">
+            Vila dos Pássaros
+          </h1>
+          <p className="mt-5 max-w-xl text-balance text-base leading-relaxed text-mn-cream opacity-90">
+            Painel de performance da campanha de mídia — Meta Ads e Google Ads.
+            Acompanhe investimento, alcance, vídeo e engajamento em tempo real.
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        <Link
+          href="/vila-dos-passaros"
+          className="group inline-flex items-center gap-3 rounded-full bg-mn-gold px-8 py-4 text-sm font-semibold uppercase tracking-[0.18em] text-mn-deep shadow-lg shadow-black/20 transition hover:brightness-110"
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+          Acessar Dashboard
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            className="transition-transform group-hover:translate-x-1"
+          >
+            <path
+              d="M5 12h14M13 6l6 6-6 6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </Link>
+      </section>
+
+      {/* Footer */}
+      <footer className="relative z-10 px-8 py-6 text-center text-xs tracking-wide text-mn-cream opacity-50 sm:px-14">
+        Montenegro Urbanismo · Vila dos Pássaros — Dashboard de mídia
       </footer>
-    </div>
+    </main>
   );
 }

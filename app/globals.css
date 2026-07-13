@@ -3,25 +3,102 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* ---- Montenegro (landing) — teal / petróleo ---- */
+  --mn-deep: #22363b;
+  --mn-base: #2c4147;
+  --mn-mid: #3e5c64;
+  --mn-light: #4a6d75;
+  --mn-cream: #f4efe6;
+  --mn-gold: #c7a15a;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* ---- Vila dos Pássaros (dashboard) — TEMA CLARO ---- */
+  /* Page/content plane = bege claro; cards = brancos; texto escuro. */
+  --vp-plane: #efe6d6; /* page background (light warm) */
+  --vp-header: #e5d5ba; /* header strip — bege mais escuro, p/ diferenciar */
+  --vp-surface: #ffffff; /* card surface (validator surface = white) */
+  --vp-surface-2: #f4ecdd; /* subtle / hover fill */
+  --vp-line: rgba(74, 56, 30, 0.12); /* hairline border */
+  --vp-line-strong: rgba(74, 56, 30, 0.2);
+
+  --vp-ink: #2c2219; /* primary text (near-black brown) */
+  --vp-ink-2: #6e6053; /* secondary text */
+  --vp-muted: #9a8a76; /* muted / axis labels */
+
+  --vp-gold: #b5842a; /* brand accent */
+  --vp-gold-bright: #caa14e;
+  --vp-gold-deep: #8f6416;
+
+  /* ---- Sidebar (permanece marrom escuro) ---- */
+  --sb-bg: #2e211b;
+  --sb-surface: #392a22;
+  --sb-ink: #efe6d6;
+  --sb-ink-2: #cbb99e;
+  --sb-muted: #9b8a76;
+  --sb-line: rgba(237, 228, 211, 0.1);
+  --sb-line-strong: rgba(237, 228, 211, 0.18);
+  --sb-gold: #dcbd82;
+
+  /* ---- Categorical series — tons terrosos (validado vs #ffffff, light) ---- */
+  --series-1: #8f5810; /* brown */
+  --series-2: #ce9a28; /* gold */
+  --series-3: #be5525; /* terracotta */
+  --series-4: #0a7a5e; /* teal-green */
+  --series-5: #7c8a2a; /* olive */
+  --series-6: #a62a4a; /* wine */
+
+  /* ---- Sequential (marrom claro -> escuro) para heatmaps ---- */
+  --seq-1: #f5ecdc;
+  --seq-2: #e6cf9f;
+  --seq-3: #d3ac5e;
+  --seq-4: #bd8a2f;
+  --seq-5: #9a6a1e;
+  --seq-6: #6e4a12;
+
+  /* ---- Chart chrome ---- */
+  --grid: #ece3d3;
+  --axis: #dccdb5;
+
+  /* ---- Status ---- */
+  --good: #4f8a3a;
+  --warn: #c98a1e;
+  --crit: #bc4a2c;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--vp-ink);
+  -webkit-font-smoothing: antialiased;
+  /* clip (not hidden) avoids creating a scroll container that would break
+     position: sticky on the sidebar, while still preventing horizontal scroll. */
+  overflow-x: clip;
+}
+
+/* Custom scrollbars for the dashboard */
+.vp-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.vp-scroll::-webkit-scrollbar-thumb {
+  background: var(--vp-line-strong);
+  border-radius: 8px;
+}
+.vp-scroll::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+  .font-serif-display {
+    font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+  }
+}
+
+/* Recharts polish */
+.recharts-wrapper:focus,
+.recharts-surface:focus {
+  outline: none;
+}
+.recharts-cartesian-axis-tick-value {
+  font-variant-numeric: tabular-nums;
 }
