@@ -13,7 +13,7 @@ export function Topbar({
   refreshing: boolean;
 }) {
   return (
-    <div className="sticky top-4 z-10 mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-vpline bg-vp-header px-5 py-4 backdrop-blur-md shadow-sm">
+    <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-vpline bg-vp-header px-5 py-4 shadow-sm">
       <div className="min-w-0">
         <h1 className="font-serif-display text-2xl font-semibold leading-tight tracking-wide text-vp-ink sm:text-[1.7rem]">
           Dashboard de Performance

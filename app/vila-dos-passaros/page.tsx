@@ -116,8 +116,9 @@ export default function Dashboard() {
   const creativesGoogle = platform === "Meta" ? [] : filteredGoogle;
 
   return (
+    // Scroll normal da página: header rola junto (some ao descer). Só a sidebar fica fixa.
     <div className="min-h-screen bg-vp-plane text-vp-ink">
-      <div className="mx-auto flex max-w-[1600px] gap-4 px-4 pb-8">
+      <div className="mx-auto flex max-w-[1600px] gap-8 px-4 pb-8 pt-4">
         <Sidebar
           active={tab}
           onSelect={selectTab}
@@ -125,12 +126,15 @@ export default function Dashboard() {
           onToggle={() => setCollapsed((c) => !c)}
         />
 
-        <main className="vp-scroll min-w-0 flex-1 py-4">
-          <Topbar
-            timestamp={data?.timestamp}
-            refreshing={refreshing}
-            onRefresh={() => load(true)}
-          />
+        <main className="min-w-0 flex-1">
+          {/* Header normal — rola com o conteúdo */}
+          <div className="mb-6">
+            <Topbar
+              timestamp={data?.timestamp}
+              refreshing={refreshing}
+              onRefresh={() => load(true)}
+            />
+          </div>
 
           {loading ? (
             <LoadingState />
