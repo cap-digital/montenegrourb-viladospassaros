@@ -157,8 +157,21 @@ export function Overview({ rows }: { rows: MetaRow[] }) {
         )}
       </div>
 
-      {/* Row: spend vs metric + objective share */}
+      {/* Row: objective share (left) + spend vs metric (right) */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <ChartCard
+          title="Investimento por objetivo"
+          subtitle="Distribuição do gasto"
+        >
+          <Donut
+            data={byObjective}
+            fmt={formatBRL}
+            height={260}
+            legend="bottom"
+            centerValue={formatBRL(t.spend)}
+            centerLabel="Total"
+          />
+        </ChartCard>
         <ChartCard
           title="Investimento x métrica por dia"
           subtitle="Barras: investimento (R$) · Linha: métrica selecionada"
@@ -176,18 +189,6 @@ export function Overview({ rows }: { rows: MetaRow[] }) {
               { key: "ctr", name: "CTR (%)", color: SERIES[2], fmt: (v) => `${v.toFixed(2)}%` },
               { key: "cpm", name: "CPM (R$)", color: SERIES[0], fmt: formatBRL },
             ]}
-          />
-        </ChartCard>
-        <ChartCard
-          title="Investimento por objetivo"
-          subtitle="Distribuição do gasto"
-        >
-          <Donut
-            data={byObjective}
-            fmt={formatBRL}
-            height={200}
-            centerValue={formatBRL(t.spend)}
-            centerLabel="Total"
           />
         </ChartCard>
       </div>

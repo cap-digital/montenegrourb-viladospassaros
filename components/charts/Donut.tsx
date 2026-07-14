@@ -15,16 +15,25 @@ export function Donut({
   height = 260,
   centerLabel,
   centerValue,
+  legend = "right",
 }: {
   data: DonutDatum[];
   fmt: (v: number) => string;
   height?: number;
   centerLabel?: string;
   centerValue?: string;
+  legend?: "right" | "bottom";
 }) {
   const total = data.reduce((s, d) => s + d.value, 0);
+  const bottom = legend === "bottom";
   return (
-    <div className="flex flex-col items-center gap-4 sm:flex-row">
+    <div
+      className={
+        bottom
+          ? "flex flex-col items-center gap-5"
+          : "flex flex-col items-center gap-4 sm:flex-row"
+      }
+    >
       <div className="relative" style={{ width: height, height }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -73,9 +82,22 @@ export function Donut({
         )}
       </div>
       {/* Legend with direct values */}
-      <ul className="flex-1 space-y-2">
+      <ul
+        className={
+          bottom
+            ? "flex w-full flex-wrap items-center justify-center gap-x-7 gap-y-2.5"
+            : "flex-1 space-y-2"
+        }
+      >
         {data.map((d, i) => (
-          <li key={i} className="flex items-center justify-between gap-3 text-sm">
+          <li
+            key={i}
+            className={
+              bottom
+                ? "flex items-center gap-2 text-sm"
+                : "flex items-center justify-between gap-3 text-sm"
+            }
+          >
             <span className="flex items-center gap-2 text-vp-ink2">
               <span
                 className="inline-block h-2.5 w-2.5 rounded-sm"
@@ -83,7 +105,7 @@ export function Donut({
               />
               {d.label}
             </span>
-            <span className="tabular-nums text-vp-ink">
+            <span className={`tabular-nums text-vp-ink ${bottom ? "font-semibold" : ""}`}>
               {fmt(d.value)}
               <span className="ml-1 text-xs text-vp-muted">
                 {total > 0 ? `${((d.value / total) * 100).toFixed(0)}%` : ""}

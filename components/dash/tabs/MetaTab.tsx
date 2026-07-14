@@ -11,17 +11,18 @@ import {
   costPerThruplay,
   groupByAdset,
   groupByCampaign,
+  groupByCreative,
   groupByDay,
   holdRate,
   hookRate,
   parseObjective,
+  shortCreative,
   sumRows,
   vtr,
   type Totals,
 } from "@/lib/metrics";
 import {
   formatBRL,
-  formatBRLCompact,
   formatCompact,
   formatDayShort,
   formatInt,
@@ -32,8 +33,9 @@ import { KpiCard } from "@/components/dash/KpiCard";
 import { InfoHint } from "@/components/dash/InfoHint";
 import { DataTable, type Column } from "@/components/dash/DataTable";
 import { Funnel } from "@/components/charts/Funnel";
-import { ComboSpendMetric } from "@/components/charts/ComboSpendMetric";
+import { IndexedLines } from "@/components/charts/IndexedLines";
 import { SelectableBars } from "@/components/charts/SelectableBars";
+import { TopCreatives } from "@/components/charts/TopCreatives";
 import { SERIES } from "@/components/charts/theme";
 import {
   IconChat,
@@ -85,6 +87,20 @@ export function MetaTab({ rows }: { rows: MetaRow[] }) {
 
   // Conjuntos de anúncios (para o comparativo dinâmico de custos/taxas).
   const adsetGroups = useMemo(() => groupByAdset(rows), [rows]);
+
+  // Criativos (para o Top 3).
+  const creatives = useMemo(
+    () =>
+      groupByCreative(rows).map((g) => ({
+        name: shortCreative(g.key),
+        thumb: g.rows.find((r) => r.thumbnail_url)?.thumbnail_url ?? "",
+        permalink:
+          g.rows.find((r) => r.instagram_permalink_url)
+            ?.instagram_permalink_url ?? "",
+        totals: g.totals,
+      })),
+    [rows],
+  );
 
   // Detailed table: one row per campaign × adset.
   const tableRows: AdsetRow[] = useMemo(() => {
@@ -205,20 +221,19 @@ export function MetaTab({ rows }: { rows: MetaRow[] }) {
       {/* Combo (investimento x métrica) + Engajamento */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <ChartCard
-          title="Investimento x métrica por dia"
-          subtitle="Barras: investimento (R$) · Linha: métrica selecionada"
+          title="Evolução indexada: investimento x métrica"
+          subtitle="Crescimento relativo dia a dia (base 100 no 1º dia)"
           className="lg:col-span-2"
         >
-          <ComboSpendMetric
+          <IndexedLines
             data={byDay}
-            spendFmt={formatBRLCompact}
+            spendFmt={formatBRL}
             metrics={[
               { key: "impressions", name: "Impressões", color: SERIES[3], fmt: formatCompact },
               { key: "reach", name: "Alcance", color: SERIES[1], fmt: formatCompact },
               { key: "clicks", name: "Cliques", color: SERIES[2], fmt: formatInt },
               { key: "videoViews", name: "Video Views", color: SERIES[4], fmt: formatCompact },
               { key: "postEngagement", name: "Engajamento", color: SERIES[5], fmt: formatCompact },
-              { key: "ctr", name: "CTR (%)", color: SERIES[2], fmt: (v) => `${v.toFixed(2)}%` },
               { key: "cpm", name: "CPM (R$)", color: SERIES[0], fmt: formatBRL },
             ]}
           />
@@ -309,6 +324,28 @@ export function MetaTab({ rows }: { rows: MetaRow[] }) {
             { key: "ctrLink", name: "CTR link (%)", fmt: (v) => `${v.toFixed(2)}%`, value: (g) => ctrLink(g.totals) * 100 },
             { key: "freq", name: "Frequência", fmt: (v) => `${v.toFixed(2)}×`, value: (g) => (g.totals.reach > 0 ? g.totals.impressions / g.totals.reach : 0) },
             { key: "spend", name: "Investimento (R$)", fmt: formatBRL, value: (g) => g.totals.spend },
+          ]}
+        />
+      </ChartCard>
+
+      {/* Top 3 criativos (no final) */}
+      <ChartCard
+        title="Top 3 criativos"
+        subtitle="Melhores peças pela métrica selecionada"
+      >
+        <TopCreatives
+          items={creatives}
+          name={(c) => c.name}
+          thumb={(c) => c.thumb}
+          permalink={(c) => c.permalink}
+          metrics={[
+            { key: "ctr", name: "CTR", fmt: (v) => `${v.toFixed(2)}%`, value: (c) => ctr(c.totals) * 100 },
+            { key: "cpv", name: "CPV", fmt: formatBRL, value: (c) => cpv(c.totals), lowerIsBetter: true },
+            { key: "spend", name: "Investimento", fmt: formatBRL, value: (c) => c.totals.spend },
+            { key: "impr", name: "Impressões", fmt: formatCompact, value: (c) => c.totals.impressions },
+            { key: "views", name: "Video Views", fmt: formatCompact, value: (c) => c.totals.videoViews },
+            { key: "clicks", name: "Cliques", fmt: formatInt, value: (c) => c.totals.clicks },
+            { key: "eng", name: "Engajamento", fmt: formatCompact, value: (c) => c.totals.postEngagement },
           ]}
         />
       </ChartCard>

@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { formatDayLong } from "@/lib/format";
 import type { Filter } from "@/lib/metrics";
-import { IconCalendar, IconLayers } from "./icons";
+import { IconCalendar, IconLayers, IconStack } from "./icons";
 
 export interface FilterState {
   from: string;
   to: string;
   phase: string;
+  platform: string; // "all" | "Meta" | "Google"
 }
 
 // Number of days between two YYYY-MM-DD strings, inclusive.
@@ -25,11 +26,15 @@ function addDays(date: string, delta: number): string {
 export function Filters({
   bounds,
   phases,
+  platforms = [],
+  showPlatform = false,
   value,
   onChange,
 }: {
   bounds: { min: string; max: string };
   phases: string[];
+  platforms?: string[];
+  showPlatform?: boolean;
   value: FilterState;
   onChange: (f: FilterState) => void;
 }) {
@@ -63,6 +68,27 @@ export function Filters({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {/* Platform filter */}
+      {showPlatform && (
+        <div className="flex items-center gap-2 rounded-xl border border-vpline bg-vp-surface px-3 py-2">
+          <IconStack size={15} className="text-vp-muted" />
+          <select
+            value={value.platform}
+            onChange={(e) => onChange({ ...value, platform: e.target.value })}
+            className="cursor-pointer bg-transparent text-sm text-vp-ink outline-none"
+          >
+            <option value="all" className="bg-vp-surface text-vp-ink">
+              Todas as plataformas
+            </option>
+            {platforms.map((p) => (
+              <option key={p} value={p} className="bg-vp-surface text-vp-ink">
+                {p}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Phase filter */}
       <div className="flex items-center gap-2 rounded-xl border border-vpline bg-vp-surface px-3 py-2">
         <IconLayers size={15} className="text-vp-muted" />

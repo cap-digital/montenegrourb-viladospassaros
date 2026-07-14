@@ -77,7 +77,7 @@ export default function Dashboard() {
   // Initialise the filter to the full range once data arrives.
   useEffect(() => {
     if (bounds.min && bounds.max && !filter) {
-      setFilter({ from: bounds.min, to: bounds.max, phase: "all" });
+      setFilter({ from: bounds.min, to: bounds.max, phase: "all", platform: "all" });
     }
   }, [bounds, filter]);
 
@@ -95,6 +95,25 @@ export default function Dashboard() {
     () => (filter ? filterRows(google, toFilter(filter)) : google),
     [google, filter],
   );
+
+  // Plataformas disponíveis (para o filtro de plataforma).
+  const platforms = useMemo(() => {
+    const p: string[] = [];
+    if (meta.length) p.push("Meta");
+    if (google.length) p.push("Google");
+    return p;
+  }, [meta, google]);
+
+  const platform = filter?.platform ?? "all";
+  // Linhas da Visão Geral conforme a plataforma selecionada.
+  const overviewRows = useMemo(() => {
+    if (platform === "Meta") return filteredMeta;
+    if (platform === "Google") return filteredGoogle;
+    return [...filteredMeta, ...filteredGoogle];
+  }, [platform, filteredMeta, filteredGoogle]);
+  // Criativos por plataforma selecionada.
+  const creativesMeta = platform === "Google" ? [] : filteredMeta;
+  const creativesGoogle = platform === "Meta" ? [] : filteredGoogle;
 
   return (
     <div className="min-h-screen bg-vp-plane text-vp-ink">
@@ -129,6 +148,8 @@ export default function Dashboard() {
                     <Filters
                       bounds={bounds}
                       phases={phases}
+                      platforms={platforms}
+                      showPlatform={tab === "overview" || tab === "creativos"}
                       value={filter}
                       onChange={setFilter}
                     />
@@ -136,11 +157,11 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {tab === "overview" && <Overview rows={filteredMeta} />}
+              {tab === "overview" && <Overview rows={overviewRows} />}
               {tab === "meta" && <MetaTab rows={filteredMeta} />}
               {tab === "google" && <GoogleTab rows={data?.google ?? []} />}
               {tab === "creativos" && (
-                <CreativesTab rows={filteredMeta} googleRows={filteredGoogle} />
+                <CreativesTab rows={creativesMeta} googleRows={creativesGoogle} />
               )}
             </>
           )}

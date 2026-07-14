@@ -120,6 +120,13 @@ export const IconTarget = ({ size = 18, className }: P) => (
   </svg>
 );
 
+export const IconStack = ({ size = 16, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <path d="M12 3l9 5-9 5-9-5 9-5z" />
+    <path d="M3 13l9 5 9-5" />
+  </svg>
+);
+
 export const IconInfo = ({ size = 16, className }: P) => (
   <svg {...base(size)} className={className}>
     <circle cx="12" cy="12" r="9" />
