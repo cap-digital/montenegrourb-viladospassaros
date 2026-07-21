@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ApiResponse } from "@/lib/types";
-import { dateRange, filterRows, listPhases } from "@/lib/metrics";
+import { dateRange, filterRows, listPhases, normalizeGoogle } from "@/lib/metrics";
 import { Sidebar, type TabId } from "@/components/dash/Sidebar";
 import { Topbar } from "@/components/dash/Topbar";
 import { Filters, toFilter, type FilterState } from "@/components/dash/Filters";
@@ -72,7 +72,6 @@ export default function Dashboard() {
 
   const meta = useMemo(() => data?.meta ?? [], [data]);
   const bounds = useMemo(() => dateRange(meta), [meta]);
-  const phases = useMemo(() => listPhases(meta), [meta]);
 
   // Initialise the filter to the full range once data arrives.
   useEffect(() => {
@@ -86,11 +85,13 @@ export default function Dashboard() {
     [meta, filter],
   );
 
-  // Google compartilha a mesma forma analítica — filtra igual quando houver dados.
-  const google = useMemo(
-    () => (data?.google ?? []) as unknown as typeof meta,
-    [data],
-  );
+  // Google é normalizado para a forma Meta (nomes de campos e quartis diferem),
+  // assim todos os helpers de métrica funcionam igual entre plataformas.
+  const google = useMemo(() => normalizeGoogle(data?.google ?? []), [data]);
+
+  // Fases unindo as duas plataformas (chave canônica normaliza "FASE 01 -
+  // AQUECIMENTO" do Meta com "FASE 1" do Google).
+  const phases = useMemo(() => listPhases([...meta, ...google]), [meta, google]);
   const filteredGoogle = useMemo(
     () => (filter ? filterRows(google, toFilter(filter)) : google),
     [google, filter],
@@ -105,12 +106,6 @@ export default function Dashboard() {
   }, [meta, google]);
 
   const platform = filter?.platform ?? "all";
-  // Linhas da Visão Geral conforme a plataforma selecionada.
-  const overviewRows = useMemo(() => {
-    if (platform === "Meta") return filteredMeta;
-    if (platform === "Google") return filteredGoogle;
-    return [...filteredMeta, ...filteredGoogle];
-  }, [platform, filteredMeta, filteredGoogle]);
   // Criativos por plataforma selecionada.
   const creativesMeta = platform === "Google" ? [] : filteredMeta;
   const creativesGoogle = platform === "Meta" ? [] : filteredGoogle;
@@ -161,7 +156,13 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {tab === "overview" && <Overview rows={overviewRows} />}
+              {tab === "overview" && (
+                <Overview
+                  meta={filteredMeta}
+                  google={filteredGoogle}
+                  platform={platform}
+                />
+              )}
               {tab === "meta" && <MetaTab rows={filteredMeta} />}
               {tab === "google" && <GoogleTab rows={data?.google ?? []} />}
               {tab === "creativos" && (

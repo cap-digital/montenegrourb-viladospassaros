@@ -1,4 +1,4 @@
-import type { MetaRow } from "./types";
+import type { GoogleRow, MetaRow } from "./types";
 
 // ---- Coercion --------------------------------------------------------------
 
@@ -7,6 +7,63 @@ export function num(v: unknown): number {
   const n = typeof v === "number" ? v : parseFloat(String(v));
   return isFinite(n) ? n : 0;
 }
+
+// ---- Google → Meta shape normalization -------------------------------------
+
+// Google Ads (YouTube) rows use different field names and report video
+// quartiles as rates (share of impressions) instead of counts. Map them onto
+// the Meta analytical shape so every shared helper (sumRows, groupBy…) works
+// across platforms. Fields Google doesn't expose (reach, leads, messaging,
+// reactions) stay 0 — treat them as "not available on this platform".
+// YouTube "watch"/"shorts"/"youtu.be" link → thumbnail image so criativos
+// mostram uma prévia real (o feed do Google traz a URL da página, não da imagem).
+function youtubeThumb(url: string): string {
+  const m = url.match(/(?:v=|\/shorts\/|youtu\.be\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
+  return m ? `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg` : url;
+}
+
+export function normalizeGoogleRow(g: GoogleRow): MetaRow {
+  const impressions = num(g.impressions);
+  const views = num(g.video_trueview_views);
+  // quartile rate (0–1) → count, so funnel-style sums stay additive
+  const q = (rate: unknown) => num(rate) * impressions;
+  return {
+    date: String(g.date ?? ""),
+    campaign: String(g.campaign ?? ""),
+    adset_name: String(g.ad_group_name ?? ""),
+    // O feed do Google repete o mesmo ad_name em todos os vídeos; o título do
+    // vídeo é o que distingue cada criativo — usamos ele quando existe.
+    ad_name: String(g.video_title || g.ad_name || ""),
+    thumbnail_url: youtubeThumb(String(g.thumbnail_url ?? "")),
+    // URL original do YouTube preservada como permalink do criativo (o feed traz
+    // a URL da página do vídeo em thumbnail_url, que trocamos pela imagem acima).
+    instagram_permalink_url: String(g.thumbnail_url ?? ""),
+    age: "",
+    gender: "",
+    spend: num(g.spend),
+    clicks: num(g.clicks),
+    actions_link_click: num(g.clicks), // Google não separa link clicks
+    impressions,
+    reach: 0,
+    actions_post_engagement: num(g.engagements),
+    video_thruplay_watched_actions_video_view: views,
+    actions_video_view: views,
+    video_p25_watched_actions_video_view: q(g.video_quartile25_rate),
+    video_p50_watched_actions_video_view: q(g.video_quartile50_rate),
+    video_p75_watched_actions_video_view: q(g.video_quartile75_rate),
+    video_p100_watched_actions_video_view: q(g.video_quartile100_rate),
+    actions_lead: 0,
+    actions_offsite_conversion_fb_pixel_lead: 0,
+    actions_onsite_conversion_lead_grouped: 0,
+    actions_onsite_conversion_messaging_conversation_started_7d: 0,
+    actions_comment: 0,
+    actions_onsite_conversion_post_save: 0,
+    actions_post_reaction: 0,
+  };
+}
+
+export const normalizeGoogle = (rows: GoogleRow[]): MetaRow[] =>
+  rows.map(normalizeGoogleRow);
 
 // ---- Aggregated totals -----------------------------------------------------
 
@@ -106,25 +163,66 @@ export const vtr = (t: Totals) => div(t.thruplay, t.videoViews); // thruplay / v
 
 // "[CAP] [FASE 01 - AQUECIMENTO] [ABO] [ALCANCE]" -> "FASE 01 - AQUECIMENTO"
 export function parsePhase(campaign: string): string {
+  if (!campaign) return "Sem fase";
   const m = campaign.match(/\[\s*(FASE\s*\d+[^\]]*)\]/i);
   return m ? m[1].trim() : "Sem fase";
 }
 
-export function listPhases(rows: MetaRow[]): string[] {
-  const s = new Set<string>();
-  for (const r of rows) s.add(parsePhase(r.campaign));
-  return Array.from(s).sort();
+// Chave canônica da fase, normalizada pelo NÚMERO — assim "FASE 01 - AQUECIMENTO"
+// (Meta) e "FASE 1" (Google) casam na mesma fase ao filtrar. O rótulo exibido
+// continua sendo o mais descritivo (parsePhase); só o casamento usa a chave.
+export function parsePhaseKey(campaign: string): string {
+  if (!campaign) return "sem-fase";
+  const m = campaign.match(/FASE\s*0*(\d+)/i);
+  return m ? `fase-${parseInt(m[1], 10)}` : "sem-fase";
+}
+
+export interface PhaseOption {
+  key: string; // valor usado no filtro (canônico)
+  label: string; // rótulo exibido (mais descritivo entre as plataformas)
+}
+
+// Lista de fases deduplicadas pela chave canônica, unindo todas as plataformas.
+// O rótulo escolhido é o mais descritivo visto para aquela chave (ex.: prefere
+// "FASE 01 - AQUECIMENTO" a "FASE 1").
+export function listPhases(rows: MetaRow[]): PhaseOption[] {
+  const best = new Map<string, string>();
+  for (const r of rows) {
+    const key = parsePhaseKey(r.campaign);
+    const label = parsePhase(r.campaign);
+    const cur = best.get(key);
+    if (cur === undefined || label.length > cur.length) best.set(key, label);
+  }
+  const order = (k: string) => {
+    const m = k.match(/(\d+)/);
+    return m ? parseInt(m[1], 10) : 9999; // "sem-fase" por último
+  };
+  return Array.from(best.entries())
+    .map(([key, label]) => ({ key, label }))
+    .sort((a, b) => order(a.key) - order(b.key));
 }
 
 // "[CAP] [FASE 01 - AQUECIMENTO] [ABO] [ALCANCE]" -> "ALCANCE"
 export function parseObjective(campaign: string): string {
+  if (!campaign) return "";
   const parts = campaign.match(/\[([^\]]+)\]/g);
   if (!parts || parts.length === 0) return campaign;
-  return parts[parts.length - 1].replace(/[[\]]/g, "").trim();
+  const clean = parts.map((p) => p.replace(/[[\]]/g, "").trim());
+  // Ignora marcadores de fase/ano no fim do nome (ex.: "AQUECIMENTO - 2026",
+  // "FASE 1") para chegar ao objetivo de fato (VIDEOVIEW, ALCANCE, …). O Meta
+  // fica igual (o objetivo já é o último colchete); o Google passa a mostrar o
+  // objetivo em vez do marcador de fase.
+  const isPhaseOrYear = (s: string) =>
+    /\bFASE\b|AQUECIMENTO|\b(?:19|20)\d{2}\b/i.test(s);
+  for (let i = clean.length - 1; i >= 0; i--) {
+    if (!isPhaseOrYear(clean[i])) return clean[i];
+  }
+  return clean[clean.length - 1];
 }
 
 // "[CONSUMIDOR FINAL] [HM] [25+] [INSTA] [AUTO]" -> "Consumidor Final"
 export function shortAdset(adset: string): string {
+  if (!adset) return "";
   const m = adset.match(/\[([^\]]+)\]/);
   if (!m) return adset;
   return m[1]
@@ -135,6 +233,7 @@ export function shortAdset(adset: string): string {
 
 // "[AD] VIDEO TEASER - CORRETOR - 10.07" -> "Video Teaser - Corretor"
 export function shortCreative(ad: string): string {
+  if (!ad) return "";
   return ad
     .replace(/^\[AD\]\s*/i, "")
     .replace(/\s*-\s*\d{2}\.\d{2}\s*$/i, "")
@@ -158,7 +257,7 @@ export function filterRows(rows: MetaRow[], f: Filter): MetaRow[] {
     const d = dayOf(r.date);
     if (f.from && d < f.from) return false;
     if (f.to && d > f.to) return false;
-    if (f.phase && f.phase !== "all" && parsePhase(r.campaign) !== f.phase)
+    if (f.phase && f.phase !== "all" && parsePhaseKey(r.campaign) !== f.phase)
       return false;
     return true;
   });

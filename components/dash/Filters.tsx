@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { formatDayLong } from "@/lib/format";
-import type { Filter } from "@/lib/metrics";
+import type { Filter, PhaseOption } from "@/lib/metrics";
 import { IconCalendar, IconLayers, IconStack } from "./icons";
 
 export interface FilterState {
@@ -32,7 +32,7 @@ export function Filters({
   onChange,
 }: {
   bounds: { min: string; max: string };
-  phases: string[];
+  phases: PhaseOption[];
   platforms?: string[];
   showPlatform?: boolean;
   value: FilterState;
@@ -101,8 +101,12 @@ export function Filters({
             Todas as fases
           </option>
           {phases.map((p) => (
-            <option key={p} value={p} className="bg-vp-surface text-vp-ink">
-              {p}
+            <option
+              key={p.key}
+              value={p.key}
+              className="bg-vp-surface text-vp-ink"
+            >
+              {p.label}
             </option>
           ))}
         </select>

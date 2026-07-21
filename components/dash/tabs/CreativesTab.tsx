@@ -16,7 +16,7 @@ import { formatBRL, formatCompact, formatInt, formatPct } from "@/lib/format";
 import { ChartCard } from "@/components/dash/ChartCard";
 import { DataTable, type Column } from "@/components/dash/DataTable";
 import { SelectableBars } from "@/components/charts/SelectableBars";
-import { IconInstagram } from "@/components/dash/icons";
+import { IconInstagram, IconPlay } from "@/components/dash/icons";
 
 interface Creative {
   name: string;
@@ -55,6 +55,22 @@ function buildCreatives(rows: MetaRow[], platform: string): Creative[] {
     platform,
     totals: g.totals,
   }));
+}
+
+// Métricas exibidas no card — dinâmicas: só entram as que têm valor, já que
+// cada peça/plataforma expõe um conjunto diferente (Google não tem alcance;
+// card estático do Meta não tem visualizações de vídeo, etc.).
+function cardMetrics(t: Totals): { label: string; value: string }[] {
+  return [
+    { label: "CTR", value: formatPct(ctr(t)), show: ctr(t) > 0 },
+    { label: "CPV", value: formatBRL(cpv(t)), show: t.videoViews > 0 },
+    { label: "Views", value: formatCompact(t.videoViews), show: t.videoViews > 0 },
+    { label: "Impr.", value: formatCompact(t.impressions), show: t.impressions > 0 },
+    { label: "Alcance", value: formatCompact(t.reach), show: t.reach > 0 },
+    { label: "Cliques", value: formatInt(t.clicks), show: t.clicks > 0 },
+  ]
+    .filter((m) => m.show)
+    .map(({ label, value }) => ({ label, value }));
 }
 
 export function CreativesTab({
@@ -168,21 +184,21 @@ export function CreativesTab({
       key: "views",
       header: "Video Views",
       align: "right",
-      render: (c) => formatInt(c.totals.videoViews),
+      render: (c) => (c.totals.videoViews > 0 ? formatInt(c.totals.videoViews) : "—"),
       sortValue: (c) => c.totals.videoViews,
     },
     {
       key: "cpv",
       header: "CPV",
       align: "right",
-      render: (c) => formatBRL(cpv(c.totals)),
+      render: (c) => (c.totals.videoViews > 0 ? formatBRL(cpv(c.totals)) : "—"),
       sortValue: (c) => cpv(c.totals),
     },
     {
       key: "hold",
       header: "Hold rate",
       align: "right",
-      render: (c) => formatPct(holdRate(c.totals)),
+      render: (c) => (c.totals.videoViews > 0 ? formatPct(holdRate(c.totals)) : "—"),
       sortValue: (c) => holdRate(c.totals),
     },
   ];
@@ -348,23 +364,33 @@ export function CreativesTab({
                     href={c.permalink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="Ver publicação no Instagram"
+                    title={
+                      c.platform === "Google"
+                        ? "Ver vídeo no YouTube"
+                        : "Ver publicação no Instagram"
+                    }
                     className="flex shrink-0 items-center gap-1.5 rounded-lg border border-vpline bg-vp-surface2 px-2.5 py-1 text-xs font-medium text-vp-ink2 transition hover:border-vp-gold hover:text-vp-goldDeep"
                   >
-                    <IconInstagram size={14} />
-                    Ver post
+                    {c.platform === "Google" ? (
+                      <>
+                        <IconPlay size={14} />
+                        Ver vídeo
+                      </>
+                    ) : (
+                      <>
+                        <IconInstagram size={14} />
+                        Ver post
+                      </>
+                    )}
                   </a>
                 )}
               </div>
+              {/* Métricas só aparecem quando fazem sentido para a peça: vídeo do
+                  Google não tem alcance, card do Meta não tem views, etc. */}
               <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                <Metric label="CTR" value={formatPct(ctr(c.totals))} />
-                <Metric label="CPV" value={formatBRL(cpv(c.totals))} />
-                <Metric label="Views" value={formatCompact(c.totals.videoViews)} />
-              </div>
-              <div className="mt-2 grid grid-cols-3 gap-2 text-center">
-                <Metric label="Impr." value={formatCompact(c.totals.impressions)} />
-                <Metric label="Alcance" value={formatCompact(c.totals.reach)} />
-                <Metric label="Cliques" value={formatInt(c.totals.clicks)} />
+                {cardMetrics(c.totals).map((m) => (
+                  <Metric key={m.label} label={m.label} value={m.value} />
+                ))}
               </div>
             </div>
           </article>

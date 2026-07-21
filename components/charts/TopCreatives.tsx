@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { IconInstagram } from "@/components/dash/icons";
 
 export interface TopMetric<T> {
@@ -19,12 +19,16 @@ export function TopCreatives<T>({
   thumb,
   permalink,
   metrics,
+  linkLabel = "Ver",
+  linkIcon,
 }: {
   items: T[];
   name: (item: T) => string;
   thumb: (item: T) => string;
   permalink: (item: T) => string;
   metrics: TopMetric<T>[];
+  linkLabel?: string;
+  linkIcon?: ReactNode;
 }) {
   const [sel, setSel] = useState(metrics[0].key);
   const metric = metrics.find((m) => m.key === sel) ?? metrics[0];
@@ -95,11 +99,11 @@ export function TopCreatives<T>({
                 href={permalink(c)}
                 target="_blank"
                 rel="noopener noreferrer"
-                title="Ver publicação"
+                title={linkLabel}
                 className="flex shrink-0 items-center gap-1.5 rounded-lg border border-vpline bg-vp-surface2 px-2.5 py-1.5 text-xs font-medium text-vp-ink2 transition hover:border-vp-gold hover:text-vp-goldDeep"
               >
-                <IconInstagram size={14} />
-                Ver
+                {linkIcon ?? <IconInstagram size={14} />}
+                {linkLabel}
               </a>
             )}
           </li>
